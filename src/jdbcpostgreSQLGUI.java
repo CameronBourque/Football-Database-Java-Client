@@ -2,10 +2,10 @@ import java.sql.*;
 import javax.swing.JOptionPane;
 //import java.sql.DriverManager;
 /*
-Robert lightfoot
+Team 7
 CSCE 315
-9-25-2019
  */
+
 public class jdbcpostgreSQLGUI {
   public static void main(String args[]) {
 	 dbSetupExample my = new dbSetupExample();
@@ -13,7 +13,7 @@ public class jdbcpostgreSQLGUI {
      Connection conn = null;
      try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://csce-315-db.engr.tamu.edu/lightfoot",
+        conn = DriverManager.getConnection("jdbc:postgresql://csce-315-db.engr.tamu.edu/team7_905_cfb",
            my.user, my.pswd);
      } catch (Exception e) {
         e.printStackTrace();
@@ -26,16 +26,16 @@ public class jdbcpostgreSQLGUI {
      //create a statement object
        Statement stmt = conn.createStatement();
        //create an SQL statement
-       String sqlStatement = "SELECT cus_lname FROM customer";
+       String sqlStatement = "SELECT \"Name\" FROM stadium";
        //send statement to DBMS
        ResultSet result = stmt.executeQuery(sqlStatement);
 
        //OUTPUT
-       JOptionPane.showMessageDialog(null,"Customer Last names from the Database.");
+       JOptionPane.showMessageDialog(null,"Stadium names from the Database.");
        //System.out.println("______________________________________");
        while (result.next()) {
          //System.out.println(result.getString("cus_lname"));
-         cus_lname += result.getString("cus_lname")+"\n";
+         cus_lname += result.getString("Name")+"\n";
        }
    } catch (Exception e){
      JOptionPane.showMessageDialog(null,"Error accessing Database.");
