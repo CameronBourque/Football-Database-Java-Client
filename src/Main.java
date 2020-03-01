@@ -14,8 +14,10 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.RowConstraints;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -62,14 +64,15 @@ public class Main extends Application {
     window.setTitle("JavaFX");
 
     GridPane grid = new GridPane();
+    
     grid.setPadding(new Insets(10, 10, 10, 10));
     grid.setVgap(10);
     grid.setHgap(10);
-
+    
     String first_drop[] = {"player", "team", "game", "stadium"};
     String second_drop[] = {"Name", "location", "members", "points", "weight", "height", "Player Code"};
     String third_drop[] = {"<", "=", ">"};
-    String fourth_drop[] = {"before", "in", "after"};
+
     ArrayList<ComboBox<String>> attributes = new  ArrayList<ComboBox<String>>();
     ArrayList<ComboBox<String>> comparisons = new ArrayList<ComboBox<String>>();
     ArrayList<TextField> values = new ArrayList<TextField>();
@@ -87,14 +90,29 @@ public class Main extends Application {
     Button moreFiltersButton = new Button("+");
 
     Text output = new Text();
-    output.setText("default output");
+    output.setText("No output");
 
+    ScrollPane outputScrollPane = new ScrollPane();
+
+    outputScrollPane.setContent(output);
+    outputScrollPane.setStyle("-fx-background-color:transparent;");
+    outputScrollPane.fitToHeightProperty().set(true);  
+    
+
+    //Show gridlines
+    grid.setGridLinesVisible(true);
+    RowConstraints r1 = new RowConstraints();
+    r1.setMaxHeight(200);
+    grid.getRowConstraints().add(0, r1);
+    
     Text retrieve = new Text();
     retrieve.setText("Retrieve all");
     Text who = new Text();
     who.setText("who have");
     Text write = new Text();
     write.setText("Write to file: ");
+    
+    
     GridPane.setConstraints(retrieve, 0, 2);
     GridPane.setConstraints(who, 2, 2);
     GridPane.setConstraints(write, 0, 2);
@@ -112,8 +130,8 @@ public class Main extends Application {
     
     
     
-
-    GridPane.setConstraints(output, 0, 0, 7, 1);
+    GridPane.setConstraints(outputScrollPane, 0, 0);
+    GridPane.setColumnSpan(outputScrollPane, 10);
     GridPane.setConstraints(goButton, 7, 3, 1, 7);
 
     //Table ComboBox action
@@ -143,7 +161,7 @@ public class Main extends Application {
     	@Override
         public void handle(ActionEvent event) {
     		//Create new dropdowns/textfields
-    	    attributes.add(new ComboBox<String>(FXCollections.observableArrayList(second_drop)));
+    	    attributes.add(new ComboBox<String>(FXCollections.observableArrayList(table_attributes.get(table.getValue()))));
     	    comparisons.add(new ComboBox<String>(FXCollections.observableArrayList(third_drop)));
     	    values.add(new TextField());
     	    
@@ -164,7 +182,7 @@ public class Main extends Application {
     });
 
     // Add everything to grid
-    grid.getChildren().addAll(retrieve, who, table, output, goButton, moreFiltersButton);
+    grid.getChildren().addAll(retrieve, who, table, outputScrollPane, goButton, moreFiltersButton);
     grid.getChildren().addAll(attributes);
     grid.getChildren().addAll(comparisons);
     grid.getChildren().addAll(values);
@@ -193,7 +211,7 @@ public class Main extends Application {
 				 if(i != 0)
 					 query += " AND ";
 				 
-				 query += "\"" + attr.get(i).getValue() + "\"" + comparison.get(i).getValue() + value.get(i).getText();
+				 query += "\"" + attr.get(i).getValue() + "\"" + comparison.get(i).getValue() + "'" +value.get(i).getText() + "'";
 				 
 				 
 
