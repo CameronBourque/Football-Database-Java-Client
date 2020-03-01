@@ -56,13 +56,13 @@ public class Main extends Application {
     grid.setVgap(10);
     grid.setHgap(10);
 
-    String first_drop[] = {"players", "teams", "games", "stadium"};
-    String second_drop[] = {"Name", "location", "members", "points", "weight", "height"};
+    String first_drop[] = {"player", "teams", "games", "stadium"};
+    String second_drop[] = {"Name", "location", "members", "points", "weight", "height", "Player Code"};
     String third_drop[] = {"<", "=", ">"};
     String fourth_drop[] = {"before", "in", "after"};
-    Vector<ComboBox<String>> attributes = new  Vector<ComboBox<String>>();
-    Vector<ComboBox<String>> comparisons = new Vector<ComboBox<String>>();
-    Vector<TextField> values = new Vector<TextField>();
+    ArrayList<ComboBox<String>> attributes = new  ArrayList<ComboBox<String>>();
+    ArrayList<ComboBox<String>> comparisons = new ArrayList<ComboBox<String>>();
+    ArrayList<TextField> values = new ArrayList<TextField>();
     
     
     ComboBox<String> table = new ComboBox<String>(FXCollections.observableArrayList(first_drop));
@@ -92,9 +92,9 @@ public class Main extends Application {
     GridPane.setConstraints(table, 1, 2);
     
 
-	GridPane.setConstraints(attributes.elementAt(0), 3, 2);
-    GridPane.setConstraints(comparisons.elementAt(0), 4, 2);
-    GridPane.setConstraints(values.elementAt(0), 5, 2);
+	GridPane.setConstraints(attributes.get(0), 3, 2);
+    GridPane.setConstraints(comparisons.get(0), 4, 2);
+    GridPane.setConstraints(values.get(0), 5, 2);
   
     GridPane.setConstraints(moreFiltersButton, 5, 3);
     
@@ -110,7 +110,7 @@ public class Main extends Application {
       @Override
       public void handle(ActionEvent event) {
         output
-            .setText(makeQuery(table.getValue(),attributes.elementAt(0).getValue(),comparisons.elementAt(0).getValue(), values.elementAt(0).getText()));
+            .setText(makeQuery(table.getValue(),attributes,comparisons, values));
       }
     });
     
@@ -127,12 +127,12 @@ public class Main extends Application {
     	    int filter_index = attributes.size()-1;
     	    
     	    //Placing in grid
-    		GridPane.setConstraints(attributes.elementAt(filter_index), 3, 2 + filter_index);
-    	    GridPane.setConstraints(comparisons.elementAt(filter_index), 4, 2 + filter_index);
-    	    GridPane.setConstraints(values.elementAt(filter_index), 5, 2 + filter_index);
+    		GridPane.setConstraints(attributes.get(filter_index), 3, 2 + filter_index);
+    	    GridPane.setConstraints(comparisons.get(filter_index), 4, 2 + filter_index);
+    	    GridPane.setConstraints(values.get(filter_index), 5, 2 + filter_index);
 
     	    //Adding elements to grid
-    	    grid.getChildren().addAll(attributes.elementAt(filter_index), comparisons.elementAt(filter_index), values.elementAt(filter_index));
+    	    grid.getChildren().addAll(attributes.get(filter_index), comparisons.get(filter_index), values.get(filter_index));
         
     	    //Moving + Button
     	    GridPane.setConstraints(moreFiltersButton, 5, 3 + filter_index);
@@ -152,13 +152,35 @@ public class Main extends Application {
   //Called from Go button
   //Converts Text to SQL statement. Executes Query
   //Returns result of query.
-  private String makeQuery(String table, String attr, String comparison, String value) {
+  private String makeQuery(String table, ArrayList<ComboBox<String>> attr, ArrayList<ComboBox<String>> comparison, ArrayList<TextField> value) {
 
 	  try {
 		  
 		  //Create SQL Statement
-		PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM " +table+ " WHERE " + "\"" + attr + "\"" + comparison + " ?");
-		pstmt.setString(1, value);
+		  //Vulnerable to SQL injection
+		 String query = new String("SELECT * FROM " + table + " ");
+		 if(attr.get(0).getValue() != null && comparison.get(0).getValue() != null && value.get(0).getText() != null) {
+			 query += " WHERE ";
+			 for(int i=0;i<attr.size();i++) {
+				 //One of the fields is empty, ignore
+				 if(attr.get(i).getValue() == null && comparison.get(i).getValue() == null && value.get(i).getText() == null)
+					 continue;
+				 
+				 if(i != 0)
+					 query += " AND ";
+				 
+				 query += "\"" + attr.get(i).getValue() + "\"" + comparison.get(i).getValue() + value.get(i).getText();
+				 
+				 
+
+				
+	
+			 }
+		 }
+		 
+		System.out.println(query);
+		PreparedStatement pstmt = conn.prepareStatement(query);
+		
 		
 
 		if(pstmt.execute()) { //There were results
@@ -178,7 +200,7 @@ public class Main extends Application {
 			
 			//Add Table Data
 			while(rs.next()) {
-				for(int i=1;i<8;i++) {
+				for(int i=1;i<md.getColumnCount()+1;i++) {
 					return_string += rs.getString(i) + " ";
 				}
 				return_string += "\n";
