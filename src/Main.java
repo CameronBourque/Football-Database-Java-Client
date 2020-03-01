@@ -26,7 +26,17 @@ public class Main extends Application {
   Stage window;
 
   static Connection conn;
+  
+  private static HashMap<String, String[]> table_attributes;
   public static void main(String[] args) {
+	  
+	  //The hash table should have every table and table attribute that a user would want to query.
+	  table_attributes = new HashMap<String, String[]>();
+	  table_attributes.put("player", new String[]{"Player Code", "Last Name"});
+	  table_attributes.put("team", new String[]{"Team Code", "Name"});
+	  table_attributes.put("game", new String[]{"Game Code", "Date"});
+	  table_attributes.put("stadium", new String[]{"Name", "City"});
+	  
 	  
     
     
@@ -56,7 +66,7 @@ public class Main extends Application {
     grid.setVgap(10);
     grid.setHgap(10);
 
-    String first_drop[] = {"player", "teams", "games", "stadium"};
+    String first_drop[] = {"player", "team", "game", "stadium"};
     String second_drop[] = {"Name", "location", "members", "points", "weight", "height", "Player Code"};
     String third_drop[] = {"<", "=", ">"};
     String fourth_drop[] = {"before", "in", "after"};
@@ -91,6 +101,7 @@ public class Main extends Application {
 
     GridPane.setConstraints(table, 1, 2);
     
+    
 
 	GridPane.setConstraints(attributes.get(0), 3, 2);
     GridPane.setConstraints(comparisons.get(0), 4, 2);
@@ -105,7 +116,19 @@ public class Main extends Application {
     GridPane.setConstraints(output, 0, 0, 7, 1);
     GridPane.setConstraints(goButton, 7, 3, 1, 7);
 
+    //Table ComboBox action
+    //Attribute box values depends on the table selected
+    //as the attributes are the columns of the table
+    table.setOnAction(new EventHandler<ActionEvent>(){
+    	@Override
+        public void handle(ActionEvent event) {
+    		for(int i=0; i<attributes.size();i++)
+    			attributes.get(i).setItems(FXCollections.observableArrayList(table_attributes.get(table.getValue())));
+    	}
+    });
+    
     //GO BUTTON ACTION
+    //Calls query and sets the output text.
     goButton.setOnAction(new EventHandler<ActionEvent>() {
       @Override
       public void handle(ActionEvent event) {
@@ -115,6 +138,7 @@ public class Main extends Application {
     });
     
     // + BUTTON ACTION
+    // Creates more fields
     moreFiltersButton.setOnAction(new EventHandler<ActionEvent>() {
     	@Override
         public void handle(ActionEvent event) {
