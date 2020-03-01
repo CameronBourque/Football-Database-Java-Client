@@ -19,6 +19,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.*;
+
 public class Main extends Application {
 
   Stage window;
@@ -58,14 +60,21 @@ public class Main extends Application {
     String second_drop[] = {"Name", "location", "members", "points", "weight", "height"};
     String third_drop[] = {"<", "=", ">"};
     String fourth_drop[] = {"before", "in", "after"};
+    Vector<ComboBox<String>> attributes = new  Vector<ComboBox<String>>();
+    Vector<ComboBox<String>> comparisons = new Vector<ComboBox<String>>();
+    Vector<TextField> values = new Vector<TextField>();
+    
     
     ComboBox<String> table = new ComboBox<String>(FXCollections.observableArrayList(first_drop));
-    ComboBox<String> attribute = new ComboBox<String>(FXCollections.observableArrayList(second_drop));
-    ComboBox<String> comparison = new ComboBox<String>(FXCollections.observableArrayList(third_drop));
-    ComboBox<String> combo_box4 = new ComboBox<String>(FXCollections.observableArrayList(fourth_drop));
-    TextField textField = new TextField();
-    TextField textField2 = new TextField();
+    
+    attributes.add(new ComboBox<String>(FXCollections.observableArrayList(second_drop)));
+    comparisons.add(new ComboBox<String>(FXCollections.observableArrayList(third_drop)));
+    values.add(new TextField());
+    
+    
     Button goButton = new Button("Go");
+    
+    Button moreFiltersButton = new Button("+");
 
     Text output = new Text();
     output.setText("default output");
@@ -81,26 +90,60 @@ public class Main extends Application {
     GridPane.setConstraints(write, 0, 2);
 
     GridPane.setConstraints(table, 1, 2);
-    GridPane.setConstraints(attribute, 3, 2);
-    GridPane.setConstraints(comparison, 4, 2);
-    GridPane.setConstraints(combo_box4, 6, 2);
-    GridPane.setConstraints(textField, 5, 2);
-    GridPane.setConstraints(textField2, 7, 2);
+    
+
+	GridPane.setConstraints(attributes.elementAt(0), 3, 2);
+    GridPane.setConstraints(comparisons.elementAt(0), 4, 2);
+    GridPane.setConstraints(values.elementAt(0), 5, 2);
+  
+    GridPane.setConstraints(moreFiltersButton, 5, 3);
+    
+    
+    
+    
+
     GridPane.setConstraints(output, 0, 0, 7, 1);
     GridPane.setConstraints(goButton, 7, 3, 1, 7);
 
+    //GO BUTTON ACTION
     goButton.setOnAction(new EventHandler<ActionEvent>() {
       @Override
       public void handle(ActionEvent event) {
         output
-            .setText(makeQuery(table.getValue(),attribute.getValue(),comparison.getValue(),textField.getText()));
+            .setText(makeQuery(table.getValue(),attributes.elementAt(0).getValue(),comparisons.elementAt(0).getValue(), values.elementAt(0).getText()));
       }
+    });
+    
+    // + BUTTON ACTION
+    moreFiltersButton.setOnAction(new EventHandler<ActionEvent>() {
+    	@Override
+        public void handle(ActionEvent event) {
+    		//Create new dropdowns/textfields
+    	    attributes.add(new ComboBox<String>(FXCollections.observableArrayList(second_drop)));
+    	    comparisons.add(new ComboBox<String>(FXCollections.observableArrayList(third_drop)));
+    	    values.add(new TextField());
+    	    
+    	    //Index used to put in right position in the grid
+    	    int filter_index = attributes.size()-1;
+    	    
+    	    //Placing in grid
+    		GridPane.setConstraints(attributes.elementAt(filter_index), 3, 2 + filter_index);
+    	    GridPane.setConstraints(comparisons.elementAt(filter_index), 4, 2 + filter_index);
+    	    GridPane.setConstraints(values.elementAt(filter_index), 5, 2 + filter_index);
+
+    	    //Adding elements to grid
+    	    grid.getChildren().addAll(attributes.elementAt(filter_index), comparisons.elementAt(filter_index), values.elementAt(filter_index));
+        
+    	    //Moving + Button
+    	    GridPane.setConstraints(moreFiltersButton, 5, 3 + filter_index);
+    	}
     });
 
     // Add everything to grid
-    grid.getChildren().addAll(retrieve, who, table, attribute, comparison, combo_box4,
-        textField, textField2, output, goButton);
-
+    grid.getChildren().addAll(retrieve, who, table, output, goButton, moreFiltersButton);
+    grid.getChildren().addAll(attributes);
+    grid.getChildren().addAll(comparisons);
+    grid.getChildren().addAll(values);
     Scene scene = new Scene(grid, 900, 400);
     window.setScene(scene);
     window.show();
