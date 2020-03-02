@@ -56,62 +56,7 @@ public class DBWindow extends JFrame{
 		conditions.add(op);
 		update();
 
-		go = new JButton("Go");
-		go.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
 
-					//Create SQL Statement
-					//Vulnerable to SQL injection
-					String query = new String("SELECT * FROM  player");
-					if(!conditions.get(0).isEmpty()) {
-						query += " WHERE ";
-						for (int i = 0; i < conditions.size(); i++) {
-							if(i != 0)
-								query += " AND ";
-							query+= conditions.get(i).toSQL();
-
-
-						}
-					}
-					System.out.println(query);
-					PreparedStatement pstmt = conn.prepareStatement(query);
-
-
-
-					if(pstmt.execute()) { //There were results
-
-						//Return String
-						String return_string = new String();
-
-						//Result Data
-						ResultSet rs = pstmt.getResultSet();
-						ResultSetMetaData md = rs.getMetaData();
-
-						//Add Table Column names
-						for(int i=1;i<md.getColumnCount()+1;i++) {
-							return_string += md.getColumnName(i) + " ";
-						}
-						return_string += "\n";
-
-						//Add Table Data
-						while(rs.next()) {
-							for(int i=1;i<md.getColumnCount()+1;i++) {
-								return_string += rs.getString(i) + " ";
-							}
-							return_string += "\n";
-						}
-
-						output.setText(return_string);
-					}
-				} catch (SQLException f) {
-					// TODO Auto-generated catch block
-					f.printStackTrace();
-				}
-			}
-		});
-		
 		setVisible(true);
 	}
 	
@@ -172,6 +117,62 @@ public class DBWindow extends JFrame{
 			ylvl++;
 		}
 		
+		go = new JButton("Go");
+		go.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+
+					//Create SQL Statement
+					//Vulnerable to SQL injection
+					String query = new String("SELECT * FROM  player");
+					if(!conditions.get(0).isEmpty()) {
+						query += " WHERE ";
+						for (int i = 0; i < conditions.size(); i++) {
+							if(i != 0)
+								query += " AND ";
+							query+= conditions.get(i).toSQL();
+
+
+						}
+					}
+					System.out.println(query);
+					PreparedStatement pstmt = conn.prepareStatement(query);
+
+
+
+					if(pstmt.execute()) { //There were results
+
+						//Return String
+						String return_string = new String();
+
+						//Result Data
+						ResultSet rs = pstmt.getResultSet();
+						ResultSetMetaData md = rs.getMetaData();
+
+						//Add Table Column names
+						for(int i=1;i<md.getColumnCount()+1;i++) {
+							return_string += md.getColumnName(i) + " ";
+						}
+						return_string += "\n";
+
+						//Add Table Data
+						while(rs.next()) {
+							for(int i=1;i<md.getColumnCount()+1;i++) {
+								return_string += rs.getString(i) + " ";
+							}
+							return_string += "\n";
+						}
+
+						output.setText(return_string);
+					}
+				} catch (SQLException f) {
+					// TODO Auto-generated catch block
+					f.printStackTrace();
+				}
+			}
+		});
+
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 4;
