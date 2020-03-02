@@ -240,7 +240,7 @@ public class DBWindow extends JFrame{
 		});
 
 		add(ui);
-		
+
 		ui.setVisible(true);
 	}
 }
