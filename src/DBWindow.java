@@ -60,10 +60,11 @@ public class DBWindow extends JFrame{
 		update();
 
 
-		setVisible(true);
+		
 	}
 	
 	public void update() {
+	
 		if(ui != null) {
 			remove(ui);
 		}
@@ -182,6 +183,15 @@ public class DBWindow extends JFrame{
 		ui.add(go, c);
 		
 		add = new JButton("+");
+		add.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				conditions.add(new ConditionalOption());
+				update();
+			}
+			
+		});
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 3;
@@ -209,5 +219,7 @@ public class DBWindow extends JFrame{
 	    c.gridx = 0;
 	    ui.add(chooser, c);
 		add(ui);
+		setVisible(false);
+		setVisible(true);
 	}
 }
