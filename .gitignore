@@ -16,5 +16,7 @@ local.properties
 .loadpath
 .recommenders
 .idea
-out/*
+out/
 dbSetupExample.java
+*.iml
+.DS_Store
