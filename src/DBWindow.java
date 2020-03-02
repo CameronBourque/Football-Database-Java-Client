@@ -11,6 +11,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class DBWindow extends JFrame{
+	public static final int MAX_ATTR = 7;
 	public static final int PADDING = 4;
 	public static final String[] TABLES = {"Player", "Team", "Game"};
 	
@@ -179,22 +180,24 @@ public class DBWindow extends JFrame{
 		c.insets = new Insets(0, PADDING, 0, 0);
 		ui.add(go, c);
 		
-		add = new JButton("+");
-		add.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				conditions.add(new ConditionalOption());
-				update();
-			}
-			
-		});
-		c = new GridBagConstraints();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 3;
-		c.gridy = ylvl;
-		c.weightx = 0.5;
-		ui.add(add, c);
+		if(conditions.size() < MAX_ATTR) {
+			add = new JButton("+");
+			add.addActionListener(new ActionListener() {
+	
+				@Override
+				public void actionPerformed(ActionEvent e) {
+						conditions.add(new ConditionalOption());
+						update();
+				}
+				
+			});
+			c = new GridBagConstraints();
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.gridx = 3;
+			c.gridy = ylvl;
+			c.weightx = 0.5;
+			ui.add(add, c);
+		}
 		
 		save = new JButton("Save");
 		c = new GridBagConstraints();
