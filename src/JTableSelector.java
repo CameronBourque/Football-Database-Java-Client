@@ -16,11 +16,13 @@ public class JTableSelector extends JComponent {
 	private ActionListener e;
 	private JButton addTableBox;
 	private JButton removeTableBox;
+	private DBWindow parent;
 	
-	public JTableSelector(String[] TableChoices, int max_size) {
+	public JTableSelector(DBWindow parent, String[] TableChoices, int max_size) {
 		assert(max_size>0);
 		this.max_size = max_size;
 		this.TableChoices = TableChoices;
+		this.parent = parent;
 		
 		TableBoxes = new ArrayList<JComboBox<String>>();
 		GridBagLayout group = new GridBagLayout();
@@ -31,7 +33,7 @@ public class JTableSelector extends JComponent {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				addRow();
-				
+				parent.update();				
 			}});
 		
 		removeTableBox = new JButton("-");
@@ -39,6 +41,7 @@ public class JTableSelector extends JComponent {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				removeRow();
+				parent.update();
 			}});
 	
 		TableBoxes.add(new JComboBox<String>(getIncrementedValues(TableChoices)));

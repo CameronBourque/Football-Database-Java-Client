@@ -24,15 +24,14 @@ public class DBWindow extends JFrame{
 	private JScrollPane scroll;
 	private JLabel retrieveAll;
 	private JLabel whoHave;
-	private ArrayList<ConditionalOption> conditions;
 	private JButton go;
-	private JButton addAttrs;
 	private JButton save;
 	private JLabel saveToFile;
 	private JTextField filename;
 	private static HashMap<String, String[]> table_attributes;
 	
 	private JTableSelector tables1;
+	private JAttrSelector attrs1;
 
 	static Connection conn;
 	
@@ -74,22 +73,6 @@ public class DBWindow extends JFrame{
 		table_attributes.put("Game", new String[]{"Game Code", "Date", "Visit Team Code", "Home Team Code"});
 		table_attributes.put("Stadium", new String[]{"Name", "City"});
 		
-		
-		//Conditions Init
-		conditions = new ArrayList<ConditionalOption>();
-
-		conditions.add(new ConditionalOption());
-		
-		addAttrs = new JButton("+");
-		addAttrs.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-					conditions.add(new ConditionalOption());
-					conditions.get(conditions.size()-1).setAttrList(generateAllAttributes(tables1.getSelectItems()));
-					update();
-			}						
-		});
-		
 		//Initialize Go Button
 		go = new JButton("Go");
 		go.addActionListener(new ActionListener() {
@@ -105,12 +88,12 @@ public class DBWindow extends JFrame{
 						if(i != table_names.length-1)
 							query += ",";
 					}
-					if(!conditions.get(0).isEmpty()) {
+					if(!attrs1.get(0).isEmpty()) {
 						query += " WHERE ";
-						for (int i = 0; i < conditions.size(); i++) {
+						for (int i = 0; i < attrs1.current_size; i++) {
 							if(i != 0)
 								query += " AND ";
-							query+= conditions.get(i).toSQL();
+							query+= attrs1.get(i).toSQL();
 
 						}
 					}
@@ -166,20 +149,20 @@ public class DBWindow extends JFrame{
 			}
 		});
 		
+		//Initialize attributes section
+		attrs1 = new JAttrSelector(this, 6);
+		
 		//Initialize tables
-		tables1 = new JTableSelector(TABLES, 6);
+		tables1 = new JTableSelector(this, TABLES, 6);
 		tables1.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				for(int i=0; i<conditions.size();i++)
-					conditions.get(i).setAttrList(generateAllAttributes(tables1.getSelectItems()));
-				
+				attrs1.setAttributes(generateAllAttributes(tables1.getSelectItems()));
 			}});
 		
-		//Initial values for condition
-		for(int i=0; i<conditions.size();i++)
-			conditions.get(i).setAttrList(generateAllAttributes(tables1.getSelectItems()));
+		//Initial values for attributes
+		attrs1.setAttributes(generateAllAttributes(tables1.getSelectItems()));
 		
 		update();
 		
@@ -194,20 +177,10 @@ public class DBWindow extends JFrame{
 		GridBagLayout group = new GridBagLayout();
 		ui.setLayout(group);
 		
-		//Add Tables
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 1;
-		c.gridy = 1;
-		c.gridheight = 2;
-		c.gridwidth = 1;
-		c.weightx = 0.5;
-		ui.add(tables1, c);
-		
 		int ylvl = 0;
 		
 		//First Row
-		c = new GridBagConstraints();
+		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = ylvl;
@@ -234,49 +207,45 @@ public class DBWindow extends JFrame{
 		c.weightx = 0.03;
 		c.insets = new Insets(0, PADDING, 0, 0);
 		ui.add(whoHave, c);
-		
-		//For each row
-		//i is row #
-		int maxSize = conditions.size();
-		for(int i = 0; i <= maxSize; i++) {
-			//if i<condition.size() we have to add the ConditionalOption JComponent
-			if(i < conditions.size()) {
-				c = new GridBagConstraints();
-				c.fill = GridBagConstraints.HORIZONTAL;
-				c.gridx = 3;
-				c.gridy = ylvl;
-				c.weightx = 0.5;
-				c.insets = new Insets(0, PADDING, 0, 0);
-				ui.add(conditions.get(i), c);
-			} //When i==condition.size() we need to add the + button.
-			else if(i == conditions.size()) {
-					c = new GridBagConstraints();
-					c.fill = GridBagConstraints.HORIZONTAL;
-					c.gridx = 3;
-					c.gridy = ylvl;
-					c.weightx = 0.5;
-					ui.add(addAttrs, c);
-
-			}
-			
-			ylvl++;
-		}
-
 
 		//Add Go button
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 4;
-		c.gridy = ylvl-2;
+		c.gridy = 1;
 		c.weightx = 0;
 		c.insets = new Insets(0, PADDING, 0, 0);
 		ui.add(go, c);
+		
+		//Add Tables
+		c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = ylvl;
+		c.gridheight = tables1.current_size+1;
+		c.gridwidth = 1;
+		c.weightx = 0.5;
+		ui.add(tables1, c);
+		
+		//Add Attributes
+		c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 3;
+		c.gridy = ylvl;
+		c.gridheight = attrs1.current_size+1;
+		c.gridwidth = 1;
+		c.weightx = 0.5;
+		ui.add(attrs1, c);
+
+		int maxSize = Math.max(attrs1.current_size, tables1.current_size);
+		ylvl+=maxSize;		
+		ylvl++;
 		
 		//Add save button
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 2;
-		c.gridy = ylvl+1;
+		c.gridy = ylvl;
 		c.weightx = 0.1;
 		ui.add(save, c);
 
@@ -286,7 +255,7 @@ public class DBWindow extends JFrame{
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridwidth = 2;
-		c.gridy = ylvl+1;
+		c.gridy = ylvl;
 		c.weightx = 0.1;
 		ui.add(filename, c);
 
