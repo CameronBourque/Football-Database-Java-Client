@@ -6,7 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -18,7 +18,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class DBWindow extends JFrame{
 	public static final int MAX_ATTR = 7;
 	public static final int PADDING = 4;
-	public static final String[] TABLES = {"Player", "Team", "Game"};
+	public static final String[] TABLES = {"","Player", "Team", "Game"};
 	
 	private JPanel ui;
 	private JTextArea output;
@@ -32,6 +32,7 @@ public class DBWindow extends JFrame{
 	private JButton save;
 	private JLabel saveToFile;
 	private JTextField filename;
+	private static HashMap<String, String[]> table_attributes;
 
 	static Connection conn;
 	
@@ -60,6 +61,13 @@ public class DBWindow extends JFrame{
 		scroll = new JScrollPane(output);
 		scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		ui = new JPanel();
+		
+		table_attributes = new HashMap<String, String[]>();
+		table_attributes.put("", new String[] {""});
+		table_attributes.put("Player", new String[]{"Player Code", "Last Name"});
+		table_attributes.put("Team", new String[]{"Team Code", "Name"});
+		table_attributes.put("Game", new String[]{"Game Code", "Date"});
+		table_attributes.put("Stadium", new String[]{"Name", "City"});
 		
 		conditions = new ArrayList<ConditionalOption>();
 
@@ -97,6 +105,15 @@ public class DBWindow extends JFrame{
 		ui.add(retrieveAll, c);
 
 		tables = new JComboBox<String>(TABLES);
+		tables.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+					//System.out.println(t)
+				for(int i = 0; i < conditions.size(); i ++)
+					conditions.get(i).setAttrList(table_attributes.get(tables.getSelectedItem()));
+				update();
+			}
+		});
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 1;

@@ -17,7 +17,7 @@ public class ConditionalOption extends JComponent {
 		GridBagLayout group = new GridBagLayout();
 		setLayout(group);
 
-		String[] attrList = new String[] {"a", "b"};
+		String[] attrList = new String[] {""};
 		attributes = new JComboBox<String>(attrList);
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -46,6 +46,10 @@ public class ConditionalOption extends JComponent {
 		add(input, c);
 	}
 
+	public void setAttrList(String[] list) {
+		attributes.setModel(new DefaultComboBoxModel<String>(list));
+	}
+	
 	public boolean isEmpty(){
 		return attributes.getSelectedItem().equals(null);
 	}
