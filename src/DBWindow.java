@@ -76,7 +76,7 @@ public class DBWindow extends JFrame{
 		c.gridy = ylvl;
 		c.gridwidth = 5;
 		c.weightx = 0.5;
-		c.ipady = 200;
+		c.ipady = 250;
 		ui.add(scroll, c);
 		
 		ylvl++;
