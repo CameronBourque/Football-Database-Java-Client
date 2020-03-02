@@ -48,4 +48,12 @@ public class ConditionalOption extends JComponent {
 		c.insets = new Insets(0, DBWindow.PADDING, 0, 0);
 		add(input, c);
 	}
+
+	public boolean isEmpty(){
+		return attributes.getSelectedItem().equals(null);
+	}
+
+	public String toSQL(){
+		return attributes.getSelectedItem().toString() + condition.getSelectedItem().toString() + input.getText();
+	}
 }

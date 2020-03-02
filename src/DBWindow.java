@@ -4,11 +4,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.*;
 import java.util.ArrayList;
 
 import javax.swing.*;
 
-public class DBWindow extends JFrame implements ActionListener{
+public class DBWindow extends JFrame{
 	public static final int PADDING = 4;
 	public static final String[] TABLES = {"Player", "Team", "Game"};
 	
@@ -21,8 +22,20 @@ public class DBWindow extends JFrame implements ActionListener{
 	private ArrayList<ConditionalOption> conditions;
 	private JButton go;
 	private JButton add;
+
+	static Connection conn;
 	
 	DBWindow(){
+		dbSetupExample my = new dbSetupExample();
+		try {
+			Class.forName("org.postgresql.Driver");
+			conn = DriverManager.getConnection("jdbc:postgresql://csce-315-db.engr.tamu.edu/team7_905_cfb", my.user, my.pswd);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println(e.getClass().getName()+": "+e.getMessage());
+			System.exit(0);
+		}
+
 		setSize(600, 400);
 		setTitle("Database GUI");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -42,6 +55,62 @@ public class DBWindow extends JFrame implements ActionListener{
 		ConditionalOption op = new ConditionalOption();
 		conditions.add(op);
 		update();
+
+		go = new JButton("Go");
+		go.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+
+					//Create SQL Statement
+					//Vulnerable to SQL injection
+					String query = new String("SELECT * FROM  player");
+					if(!conditions.get(0).isEmpty()) {
+						query += " WHERE ";
+						for (int i = 0; i < conditions.size(); i++) {
+							if(i != 0)
+								query += " AND ";
+							query+= conditions.get(i).toSQL();
+
+
+						}
+					}
+					System.out.println(query);
+					PreparedStatement pstmt = conn.prepareStatement(query);
+
+
+
+					if(pstmt.execute()) { //There were results
+
+						//Return String
+						String return_string = new String();
+
+						//Result Data
+						ResultSet rs = pstmt.getResultSet();
+						ResultSetMetaData md = rs.getMetaData();
+
+						//Add Table Column names
+						for(int i=1;i<md.getColumnCount()+1;i++) {
+							return_string += md.getColumnName(i) + " ";
+						}
+						return_string += "\n";
+
+						//Add Table Data
+						while(rs.next()) {
+							for(int i=1;i<md.getColumnCount()+1;i++) {
+								return_string += rs.getString(i) + " ";
+							}
+							return_string += "\n";
+						}
+
+						output.setText(return_string);
+					}
+				} catch (SQLException f) {
+					// TODO Auto-generated catch block
+					f.printStackTrace();
+				}
+			}
+		});
 		
 		setVisible(true);
 	}
@@ -103,8 +172,7 @@ public class DBWindow extends JFrame implements ActionListener{
 			ylvl++;
 		}
 		
-		go = new JButton("Go");
-		go.addActionListener(this);
+
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 4;
@@ -124,10 +192,4 @@ public class DBWindow extends JFrame implements ActionListener{
 		add(ui);
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		System.out.println("Action occured");
-		
-	}
 }
