@@ -8,6 +8,7 @@ import java.sql.*;
 import java.util.ArrayList;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class DBWindow extends JFrame{
 	public static final int PADDING = 4;
@@ -22,6 +23,8 @@ public class DBWindow extends JFrame{
 	private ArrayList<ConditionalOption> conditions;
 	private JButton go;
 	private JButton add;
+	private JButton save;
+	private JLabel saveToFile;
 
 	static Connection conn;
 	
@@ -138,9 +141,6 @@ public class DBWindow extends JFrame{
 					}
 					System.out.println(query);
 					PreparedStatement pstmt = conn.prepareStatement(query);
-
-
-
 					if(pstmt.execute()) { //There were results
 
 						//Return String
@@ -189,6 +189,25 @@ public class DBWindow extends JFrame{
 		c.weightx = 0.5;
 		ui.add(add, c);
 		
+		save = new JButton("Save");
+		c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 2;
+		c.gridy = ylvl;
+		c.weightx = 0.5;
+		ui.add(save, c);
+		
+	    JFileChooser chooser = new JFileChooser();
+	    FileNameExtensionFilter filter = new FileNameExtensionFilter(
+	        "JPG & GIF Images", "jpg", "gif");
+	    chooser.setFileFilter(filter);
+	    int returnVal = chooser.showOpenDialog(this);
+	    if(returnVal == JFileChooser.APPROVE_OPTION) {
+	       System.out.println("You chose to open this file: " +
+	            chooser.getSelectedFile().getName());
+	    }
+	    c.gridx = 0;
+	    ui.add(chooser, c);
 		add(ui);
 	}
 }
