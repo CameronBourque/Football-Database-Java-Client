@@ -103,11 +103,11 @@ public class ConditionalOption extends JComponent {
 		String lhs = attributes.getSelectedItem().toString();
 		String rhs = input.getSelectedItem().toString();
 		
-		if(attributes.getSelectedIndex() == attributes.getItemCount()-1) {
+		if(attributes.getSelectedIndex() == -1) {
 			lhs = "\'" + attributes.getSelectedItem() + "\'";
 		}
 		
-		if(input.getSelectedIndex() == input.getItemCount()-1) {
+		if(input.getSelectedIndex() == -1) {
 			rhs = "\'" + input.getSelectedItem() + "\'";
 		}
 		
