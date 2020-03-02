@@ -35,8 +35,8 @@ public class DBWindow extends JFrame{
 			System.err.println(e.getClass().getName()+": "+e.getMessage());
 			System.exit(0);
 		}
-
-		setSize(600, 400);
+		
+		setSize(800, 533);
 		setTitle("Database GUI");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
@@ -172,12 +172,11 @@ public class DBWindow extends JFrame{
 			ylvl++;
 		}
 		
-
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 4;
 		c.gridy = ylvl-1;
-		c.weightx = 0.5;
+		c.weightx = 0;
 		c.insets = new Insets(0, PADDING, 0, 0);
 		ui.add(go, c);
 		
@@ -191,5 +190,4 @@ public class DBWindow extends JFrame{
 		
 		add(ui);
 	}
-
 }
