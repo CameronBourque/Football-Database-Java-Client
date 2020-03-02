@@ -26,6 +26,7 @@ public class DBWindow extends JFrame{
 	private JButton add;
 	private JButton save;
 	private JLabel saveToFile;
+	private JTextField filename;
 
 	static Connection conn;
 	
@@ -203,9 +204,18 @@ public class DBWindow extends JFrame{
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 2;
-		c.gridy = ylvl;
+		c.gridy = ylvl+1;
 		c.weightx = 0.1;
 		ui.add(save, c);
+
+		filename = new JTextField();
+		c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridwidth = 2;
+		c.gridy = ylvl+1;
+		c.weightx = 0.1;
+		ui.add(filename, c);
 
 		add(ui);
 		
