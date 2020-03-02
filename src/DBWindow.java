@@ -52,24 +52,21 @@ public class DBWindow extends JFrame{
 		output.setVisible(true);
 		scroll = new JScrollPane(output);
 		scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		ui = new JPanel();
 		
 		conditions = new ArrayList<ConditionalOption>();
 
 		ConditionalOption op = new ConditionalOption();
 		conditions.add(op);
 		update();
-
-
 		
+		setVisible(true);
 	}
 	
 	public void update() {
-	
-		if(ui != null) {
-			remove(ui);
-		}
+		ui.setVisible(false);
+		ui.removeAll();
 		
-		ui = new JPanel();
 		GridBagLayout group = new GridBagLayout();
 		ui.setLayout(group);
 		
@@ -219,7 +216,7 @@ public class DBWindow extends JFrame{
 	    c.gridx = 0;
 	    ui.add(chooser, c);
 		add(ui);
-		setVisible(false);
-		setVisible(true);
+		
+		ui.setVisible(true);
 	}
 }
