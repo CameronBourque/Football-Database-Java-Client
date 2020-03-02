@@ -25,10 +25,11 @@ public class DBWindow extends JFrame{
 	private JScrollPane scroll;
 	private JLabel retrieveAll;
 	private JLabel whoHave;
-	private JComboBox<String> tables;
+	private ArrayList<JComboBox<String>> tables;
 	private ArrayList<ConditionalOption> conditions;
 	private JButton go;
-	private JButton add;
+	private JButton addAttrs;
+	private JButton addTables;
 	private JButton save;
 	private JLabel saveToFile;
 	private JTextField filename;
@@ -51,9 +52,6 @@ public class DBWindow extends JFrame{
 		setTitle("Database GUI");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		//output on top
-		//"retrieve all" [drop down] "who have" [drop down] [drop down] [text box] [GO button]
-		//[+ button]
 		output = new JTextArea();
 		output.setLineWrap(true);
 		output.setEditable(false);
@@ -70,11 +68,14 @@ public class DBWindow extends JFrame{
 		table_attributes.put("Stadium", new String[]{"Name", "City"});
 		
 		conditions = new ArrayList<ConditionalOption>();
+		tables = new ArrayList<JComboBox<String>>();
 		
-		tables = new JComboBox<String>(TABLES);
+		JComboBox<String> tbl = new JComboBox<String>(TABLES);
+		tables.add(tbl);
 
 		ConditionalOption op = new ConditionalOption();
 		conditions.add(op);
+		
 		update();
 		
 		setVisible(true);
@@ -105,23 +106,6 @@ public class DBWindow extends JFrame{
 		c.gridy = ylvl;
 		c.weightx = 0.03;
 		ui.add(retrieveAll, c);
-
-		tables.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-					//System.out.println(t)
-				for(int i = 0; i < conditions.size(); i ++)
-					conditions.get(i).setAttrList(table_attributes.get(tables.getSelectedItem()));
-				update();
-			}
-		});
-		c = new GridBagConstraints();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 1;
-		c.gridy = ylvl;
-		c.weightx = 0.4;
-		c.insets = new Insets(0, PADDING, 0, 0);
-		ui.add(tables, c);
 		
 		whoHave = new JLabel("who have");
 		c = new GridBagConstraints();
@@ -132,14 +116,79 @@ public class DBWindow extends JFrame{
 		c.insets = new Insets(0, PADDING, 0, 0);
 		ui.add(whoHave, c);
 		
-		for(int i = 0; i < conditions.size(); i++) {
-			c = new GridBagConstraints();
-			c.fill = GridBagConstraints.HORIZONTAL;
-			c.gridx = 3;
-			c.gridy = ylvl;
-			c.weightx = 0.5;
-			c.insets = new Insets(0, PADDING, 0, 0);
-			ui.add(conditions.get(i), c);
+		int maxSize = Math.max(conditions.size(), tables.size());
+		for(int i = 0; i <= maxSize; i++) {
+			if(i < conditions.size()) {
+				c = new GridBagConstraints();
+				c.fill = GridBagConstraints.HORIZONTAL;
+				c.gridx = 3;
+				c.gridy = ylvl;
+				c.weightx = 0.5;
+				c.insets = new Insets(0, PADDING, 0, 0);
+				ui.add(conditions.get(i), c);
+			}
+			else if(i == conditions.size()) {
+				if(conditions.size() < MAX_ATTR) {
+					addAttrs = new JButton("+");
+					addAttrs.addActionListener(new ActionListener() {			
+						@Override
+						public void actionPerformed(ActionEvent e) {
+								conditions.add(new ConditionalOption());
+								conditions.get(conditions.size()-1).setAttrList(table_attributes.get(tables.get(0).getSelectedItem()));
+								update();
+						}						
+					});
+					c = new GridBagConstraints();
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridx = 3;
+					c.gridy = ylvl;
+					c.weightx = 0.5;
+					ui.add(addAttrs, c);
+				}
+				else if(i+1 == maxSize) {
+					ylvl--;
+				}
+			}
+			
+			if(i < tables.size()) {
+				tables.get(i).addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+							//System.out.println(t)
+						for(int i = 0; i < conditions.size(); i ++)
+							conditions.get(i).setAttrList(table_attributes.get(tables.get(i).getSelectedItem()));
+						update();
+					}
+				});
+				c = new GridBagConstraints();
+				c.fill = GridBagConstraints.HORIZONTAL;
+				c.gridx = 1;
+				c.gridy = ylvl;
+				c.weightx = 0.4;
+				c.insets = new Insets(0, PADDING, 0, 0);
+				ui.add(tables.get(i), c);
+			}
+			else if(i == tables.size()) {				
+				if(tables.size() < MAX_ATTR) {
+					addTables = new JButton("+");
+					addTables.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+								tables.add(new JComboBox<String>(TABLES));
+								update();
+						}
+					});
+					c = new GridBagConstraints();
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.gridx = 1;
+					c.gridy = ylvl;
+					c.weightx = 0.5;
+					ui.add(addTables, c);
+				}
+				else if(i+1 == maxSize) {
+					ylvl--;
+				}
+			}
 			ylvl++;
 		}
 		
@@ -198,30 +247,10 @@ public class DBWindow extends JFrame{
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 4;
-		c.gridy = ylvl-1;
+		c.gridy = ylvl-2;
 		c.weightx = 0;
 		c.insets = new Insets(0, PADDING, 0, 0);
 		ui.add(go, c);
-		
-		if(conditions.size() < MAX_ATTR) {
-			add = new JButton("+");
-			add.addActionListener(new ActionListener() {
-	
-				@Override
-				public void actionPerformed(ActionEvent e) {
-						conditions.add(new ConditionalOption());
-						conditions.get(conditions.size()-1).setAttrList(table_attributes.get(tables.getSelectedItem()));
-						update();
-				}
-				
-			});
-			c = new GridBagConstraints();
-			c.fill = GridBagConstraints.HORIZONTAL;
-			c.gridx = 3;
-			c.gridy = ylvl;
-			c.weightx = 0.5;
-			ui.add(add, c);
-		}
 		
 		save = new JButton("Save");
 		c = new GridBagConstraints();
