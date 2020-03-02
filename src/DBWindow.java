@@ -7,6 +7,11 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 import java.util.ArrayList;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -163,7 +168,6 @@ public class DBWindow extends JFrame{
 							}
 							return_string += "\n";
 						}
-
 						output.setText(return_string);
 					}
 				} catch (SQLException f) {
@@ -216,6 +220,24 @@ public class DBWindow extends JFrame{
 		c.gridy = ylvl+1;
 		c.weightx = 0.1;
 		ui.add(filename, c);
+
+		save.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					File file = new File(filename.getText());
+					String toadd = "";
+					file.createNewFile(); // creates new or overwrites old file with same name
+					FileWriter writer = new FileWriter(file);
+					toadd = output.getText();
+					writer.write(toadd);
+					writer.flush();
+					writer.close();
+				} catch (IOException f) {
+					f.printStackTrace();
+				}
+			}
+		});
 
 		add(ui);
 		
