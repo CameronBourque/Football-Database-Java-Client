@@ -3,6 +3,7 @@ Config.java
 /*.DS_Store
 .classpath
 .project
+.ignore
 .metadata
 bin/
 tmp/
