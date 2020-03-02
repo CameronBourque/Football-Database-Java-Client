@@ -55,6 +55,6 @@ public class ConditionalOption extends JComponent {
 	}
 
 	public String toSQL(){
-		return "\"" + attributes.getSelectedItem().toString() + "\"" + condition.getSelectedItem().toString() + "'" + input.getText() + "'";
+		return "\"" + attributes.getSelectedItem().toString() + "\"" + condition.getSelectedItem().toString() + "'" + input.getText();
 	}
 }
