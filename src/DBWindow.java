@@ -70,6 +70,8 @@ public class DBWindow extends JFrame{
 		table_attributes.put("Stadium", new String[]{"Name", "City"});
 		
 		conditions = new ArrayList<ConditionalOption>();
+		
+		tables = new JComboBox<String>(TABLES);
 
 		ConditionalOption op = new ConditionalOption();
 		conditions.add(op);
@@ -104,7 +106,6 @@ public class DBWindow extends JFrame{
 		c.weightx = 0.03;
 		ui.add(retrieveAll, c);
 
-		tables = new JComboBox<String>(TABLES);
 		tables.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -209,6 +210,7 @@ public class DBWindow extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) {
 						conditions.add(new ConditionalOption());
+						conditions.get(conditions.size()-1).setAttrList(table_attributes.get(tables.getSelectedItem()));
 						update();
 				}
 				
