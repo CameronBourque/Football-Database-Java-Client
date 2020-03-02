@@ -3,6 +3,7 @@ Config.java
 /*.DS_Store
 .classpath
 .project
+.ignore
 .metadata
 bin/
 tmp/
@@ -14,3 +15,4 @@ local.properties
 .settings/
 .loadpath
 .recommenders
+.idea
