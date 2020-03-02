@@ -201,20 +201,9 @@ public class DBWindow extends JFrame{
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 2;
 		c.gridy = ylvl;
-		c.weightx = 0.5;
+		c.weightx = 0.1;
 		ui.add(save, c);
-		
-	    JFileChooser chooser = new JFileChooser();
-	    FileNameExtensionFilter filter = new FileNameExtensionFilter(
-	        "JPG & GIF Images", "jpg", "gif");
-	    chooser.setFileFilter(filter);
-	    int returnVal = chooser.showOpenDialog(this);
-	    if(returnVal == JFileChooser.APPROVE_OPTION) {
-	       System.out.println("You chose to open this file: " +
-	            chooser.getSelectedFile().getName());
-	    }
-	    c.gridx = 0;
-	    ui.add(chooser, c);
+
 		add(ui);
 		
 		ui.setVisible(true);
