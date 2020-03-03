@@ -8,7 +8,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 public class ConditionalOption extends JComponent {
-	public static final String[] CONDITIONS = new String[] {"<", "=", ">", "<>"};
+	public static final String[] CONDITIONS = new String[] {"=", "<", ">", "<>"};
 	
 	private JComboBox<String> attributes;
 	private JComboBox<String> condition;

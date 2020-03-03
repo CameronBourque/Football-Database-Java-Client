@@ -1,7 +1,4 @@
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -113,16 +110,22 @@ public class DBWindow extends JFrame{
 
 						//Add Table Column names
 						for(int i=1;i<md.getColumnCount()+1;i++) {
-							return_string += md.getColumnName(i) + " ";
+							return_string += String.format("| %-20s",md.getColumnLabel(i));
 						}
+						return_string += '|';
+						return_string += "\n";
+						return_string += String.format("-".repeat(23*md.getColumnCount()+1));
 						return_string += "\n";
 						//Add Table Data
 						while(rs.next()) {
 							for(int i=1;i<md.getColumnCount()+1;i++) {
-								return_string += rs.getString(i) + " ";
+								return_string += String.format("| %-20s",rs.getString(i));
 							}
+							return_string += '|';
 							return_string += "\n";
 						}
+						Font f = new Font(Font.MONOSPACED,Font.PLAIN,12);
+						output.setFont(f);
 						output.setText(return_string);
 					}
 				} catch (SQLException f) {
