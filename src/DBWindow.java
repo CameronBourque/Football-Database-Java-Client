@@ -17,7 +17,7 @@ import javax.swing.*;
 public class DBWindow extends JFrame{
 	public static final int MAX_ATTR = 6;
 	public static final int PADDING = 4;
-	public static final String[] TABLES = {"Player", "Team", "Game"};
+	public static final String[] TABLES = {"Player","in_year", "Team", "Game"};
 	
 	private JPanel ui;
 	private JTextArea output;
@@ -69,6 +69,7 @@ public class DBWindow extends JFrame{
 		table_attributes = new HashMap<String, String[]>();
 		table_attributes.put("", new String[] {""});
 		table_attributes.put("Player", new String[]{"Player Code", "Last Name"});
+		table_attributes.put("in_year", new String[]{"Player Code", "Year", "Team Code", "Uniform Number", "Height", "Weight", "Class", "Position"});
 		table_attributes.put("Team", new String[]{"Team Code", "Name"});
 		table_attributes.put("Game", new String[]{"Game Code", "Date", "Visit Team Code", "Home Team Code"});
 		table_attributes.put("Stadium", new String[]{"Name", "City"});
@@ -81,6 +82,8 @@ public class DBWindow extends JFrame{
 				try {
 					//Create SQL Statement
 					//Vulnerable to SQL injection
+					
+					
 					String query = new String("SELECT * FROM  ");
 					String[] table_names = tables1.getSelectItems();
 					for(int i=0;i<table_names.length;i++) {
@@ -275,8 +278,8 @@ public class DBWindow extends JFrame{
 		for(int i=0;i<output.size();i++)
 			size += output.get(i).length;
 		
-		//Increase size for Custom Value
-		size++;
+		//Increase size for Year and Custom Value
+		size += 1;
 		String[] real_output = new String[size];
 		int curr = 0;
 		for(int i=0;i<output.size();i++) {
