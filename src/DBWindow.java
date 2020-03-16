@@ -1,4 +1,5 @@
 import java.awt.*;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -8,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.Math;
 
 import javax.swing.*;
 
@@ -15,6 +17,7 @@ public class DBWindow extends JFrame{
 	public static final int MAX_ATTR = 6;
 	public static final int PADDING = 4;
 	public static final String[] TABLES = {"Player","in_year", "Team", "Game"};
+	public static final String[] CONFERENCES = {"Atlantic Coast Conference", "Big 12 Conference", "Big East Conference", "Big Ten Conference", "Conference USA","Independent","Mid-American Conference","Mountain West Conference","Pacific-10 Conference", "Southeastern Conference", "Sun Belt Conference", "Western Athletic Conference", "Ind", "Ivy", "Southwestern"};
 	
 	private JPanel ui;
 	private JTextArea output;
@@ -26,10 +29,14 @@ public class DBWindow extends JFrame{
 	private JLabel saveToFile;
 	private JTextField filename;
 	private static HashMap<String, String[]> table_attributes;
+
 	
 	private JTableSelector tables1;
 	private JAttrSelector attrs1;
-
+	
+	//Query 4
+	private JButton getHomeFieldAdvantage;
+	private JComboBox<String> conferenceChoice;
 	static Connection conn;
 	
 	DBWindow(){
@@ -80,7 +87,6 @@ public class DBWindow extends JFrame{
 					//Create SQL Statement
 					//Vulnerable to SQL injection
 					
-					
 					String query = new String("SELECT * FROM  ");
 					String[] table_names = tables1.getSelectItems();
 					for(int i=0;i<table_names.length;i++) {
@@ -97,36 +103,13 @@ public class DBWindow extends JFrame{
 
 						}
 					}
-					System.out.println(query);
 					PreparedStatement pstmt = conn.prepareStatement(query);
 					if(pstmt.execute()) { //There were results
+						
 
-						//Return String
-						String return_string = new String();
-
-						//Result Data
-						ResultSet rs = pstmt.getResultSet();
-						ResultSetMetaData md = rs.getMetaData();
-
-						//Add Table Column names
-						for(int i=1;i<md.getColumnCount()+1;i++) {
-							return_string += String.format("| %-20s",md.getColumnLabel(i));
-						}
-						return_string += '|';
-						return_string += "\n";
-						return_string += String.format("-".repeat(23*md.getColumnCount()+1));
-						return_string += "\n";
-						//Add Table Data
-						while(rs.next()) {
-							for(int i=1;i<md.getColumnCount()+1;i++) {
-								return_string += String.format("| %-20s",rs.getString(i));
-							}
-							return_string += '|';
-							return_string += "\n";
-						}
 						Font f = new Font(Font.MONOSPACED,Font.PLAIN,12);
 						output.setFont(f);
-						output.setText(return_string);
+						output.setText(resultSetToString(pstmt.getResultSet()));
 					}
 				} catch (SQLException f) {
 					// TODO Auto-generated catch block
@@ -170,6 +153,74 @@ public class DBWindow extends JFrame{
 		//Initial values for attributes
 		attrs1.setAttributes(generateAllAttributes(tables1.getSelectItems()));
 		
+		
+		//Initialize getHomeFieldAdvantage Button
+		getHomeFieldAdvantage = new JButton("Home Field Advantage");
+		getHomeFieldAdvantage.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//mean and std points for visitors in all conferences.
+				double mean = 23.3621;
+				double std = 13.6618;
+				try {
+					String query1 = new String("select avg(\"Visit Team Points\"), stddev_pop(\"Visit Team Points\") from game_results join Team on \"Home Team Code\"=\"Team Code\" join conference on team.\"Conference\"=conference.code where conference.\"name\"=? and \"Year\"='06/06/2012'");
+					PreparedStatement pstmt = conn.prepareStatement(query1);
+					pstmt.setString(1, (String) conferenceChoice.getSelectedItem());
+
+					if(pstmt.execute()) {
+						ResultSet rs = pstmt.getResultSet();
+						rs.next();
+						mean=rs.getDouble(1);
+						std=rs.getDouble(2);
+					}
+					
+	
+					String query= new String("select team.\"Name\", avg(\"Home Team Points\"), stddev_pop(\"Home Team Points\")"
+							+ " from game_results join Team on \"Home Team Code\"=\"Team Code\""
+							+ " join conference on team.\"Conference\"=conference.code "
+							+ "where conference.\"name\"=? and \"Year\"='06/06/2012' "
+							+ "group by team.\"Name\" order by avg(\"Home Team Points\") desc;");
+					pstmt = conn.prepareStatement(query);
+					pstmt.setString(1, (String) conferenceChoice.getSelectedItem());
+					
+					if(pstmt.execute()) {
+						ResultSet rs = pstmt.getResultSet();
+						ResultSetMetaData md = rs.getMetaData();
+						//Return String
+						String return_string = new String();
+						//Add Table Column names
+						return_string += String.format("| %-20s", "Team");
+						return_string += String.format("| %-20s", "Home Field Advantage");
+						return_string += '|';
+						return_string += "\n";
+						return_string += "\n";
+						//Add Table Data
+						double hometeam_mean;
+						double hometeam_std;
+						while(rs.next()) {
+							hometeam_mean = rs.getDouble(2);
+							hometeam_std = rs.getDouble(3);
+							
+							return_string += String.format("| %-20s",rs.getString(1));
+							return_string += String.format("| %-20s", 100*(1-cdf_approx( (mean-hometeam_mean) / Math.sqrt(std*std + hometeam_std*hometeam_std))));
+							return_string += '|';
+							return_string += "\n";
+						}
+						Font f = new Font(Font.MONOSPACED,Font.PLAIN,12);
+						output.setFont(f);
+						output.setText(return_string);
+					}
+				} catch (SQLException f) {
+					// TODO Auto-generated catch block
+					f.printStackTrace();
+				}
+				
+			}
+			
+		});
+		
+		//Initialize
+		conferenceChoice = new JComboBox<String>(CONFERENCES);
 		update();
 		
 		setVisible(true);
@@ -264,6 +315,29 @@ public class DBWindow extends JFrame{
 		c.gridy = ylvl;
 		c.weightx = 0.1;
 		ui.add(filename, c);
+		
+		//Query 1
+		ylvl++;
+		
+		//Query 2
+		ylvl++;
+		
+		//Query 3
+		ylvl++;
+
+		//Query 4
+		ylvl++;
+		
+		c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = ylvl;
+		c.weightx = 0.1;
+		ui.add(conferenceChoice, c);
+		c.gridx = 1;
+		c.gridwidth = 3;
+		ui.add(getHomeFieldAdvantage, c);
+		
 
 
 		add(ui);
@@ -324,5 +398,41 @@ public class DBWindow extends JFrame{
 		
 		return output;
 	}
+
+
+String resultSetToString(ResultSet rs) throws SQLException {
+
+	ResultSetMetaData md = rs.getMetaData();
+	//Return String
+	String return_string = new String();
+
+	//Add Table Column names
+	for(int i=1;i<md.getColumnCount()+1;i++) {
+		return_string += String.format("| %-20s",md.getColumnLabel(i));
+	}
+	return_string += '|';
+	return_string += "\n";
+	//return_string += String.format("-".repeat(23*md.getColumnCount()+1));
+	return_string += "\n";
+	//Add Table Data
+	while(rs.next()) {
+		for(int i=1;i<md.getColumnCount()+1;i++) {
+			return_string += String.format("| %-20s",rs.getString(i));
+		}
+		return_string += '|';
+		return_string += "\n";
+	}
+	return return_string;
+}
+
+double cdf_approx(double z) {
+
+	if(z>0) {
+		return 1 - 0.5 * Math.exp(-(z*z+z)/2);
+	}else{
+		z = -z;
+		return 0.5 * Math.exp(-(z*z+z)/2);
+	}
+}
 
 }
