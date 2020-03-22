@@ -10,6 +10,9 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.Math;
+import java.util.List;
+import java.sql.*;
+import javax.swing.JOptionPane;
 
 import javax.swing.*;
 
@@ -26,9 +29,14 @@ public class DBWindow extends JFrame{
 	private JLabel whoHave;
 	private JButton go;
 	private JButton save;
+	private JButton go_part1;
 	private JLabel saveToFile;
 	private JTextField filename;
+	private JTextField t1_part1;
+	private JTextField t2_part1;
 	private static HashMap<String, String[]> table_attributes;
+	private static HashMap<Integer, String> teamcodemap;
+	private static HashMap<String, Integer> teamnamemap;
 
 	
 	private JTableSelector tables1;
@@ -218,7 +226,123 @@ public class DBWindow extends JFrame{
 			}
 			
 		});
-		
+
+		// part 1
+		go_part1 = new JButton("Go");
+		t1_part1 = new JTextField();
+		t2_part1 = new JTextField();
+		teamcodemap = new HashMap<Integer, String>();
+		teamnamemap = new HashMap<String, Integer>();
+		go_part1.addActionListener(new ActionListener() {
+			   @Override
+			   public void actionPerformed(ActionEvent e) {
+				   try {
+				   		String teamquery = new String("select * from team");
+				   		Statement stmt1 = conn.createStatement();
+				   		ResultSet result1 = stmt1.executeQuery(teamquery);
+
+				   		while (result1.next()) {
+				   			teamcodemap.put(result1.getInt("Team Code"),result1.getString("Name"));
+							teamnamemap.put(result1.getString("Name"),result1.getInt("Team Code"));
+						}
+
+					   DijkstrasShortestPathAdjacencyList chain = new DijkstrasShortestPathAdjacencyList(13000);
+					   String query = new String("select * from game_results");
+					   Statement stmt = conn.createStatement();
+					   ResultSet result = stmt.executeQuery(query);
+
+					   String return_string = new String();
+
+					   while (result.next()) {
+					   	if (result.getString("Home Team Won").equals("t")){
+					   		chain.addEdge(result.getInt("Home Team Code"),result.getInt("Visit Team Code"),1,result.getLong("Game Code"));
+						} else {
+							chain.addEdge(result.getInt("Visit Team Code"),result.getInt("Home Team Code"),1,result.getLong("Game Code"));
+						}
+					   }
+
+//					   String team1played = new String("Select \"Game Code\" from game where \"Visit Team Code\"=" + teamnamemap.get(t1_part1.getText()).toString() + "or \"Home Team Code\" = " + teamnamemap.get(t1_part1.getText()).toString());
+//					   String team2played = new String("Select \"Game Code\" from game where \"Visit Team Code\"=" + teamnamemap.get(t2_part1.getText()).toString() + "or \"Home Team Code\" = " + teamnamemap.get(t2_part1.getText()).toString());
+//					   ArrayList<Long> team1games = new ArrayList<Long>();
+//					   ArrayList<Long> team2games = new ArrayList<Long>();
+//
+//					   Statement stmt2 = conn.createStatement();
+//					   ResultSet result2 = stmt.executeQuery(team1played);
+//
+//					   while (result2.next()) {
+//					   	team1games.add(result2.getLong("Game Code"));
+//					   }
+//
+//					   Statement stmt3 = conn.createStatement();
+//					   ResultSet result3 = stmt.executeQuery(team2played);
+//
+//					   while (result3.next()) {
+//					   	team2games.add(result3.getLong("Game Code"));
+//					   }
+//
+//					   System.out.println(team2games);
+//
+//					   DijkstrasShortestPathAdjacencyList chain2 = new DijkstrasShortestPathAdjacencyList(100);
+//					   chain2.addEdge(6,1,1, 1);
+//					   chain2.addEdge(6,1,1,2);
+//					   chain2.addEdge(6,1,1, 3);
+//					   chain2.addEdge(1,2,1, 4);
+//					   chain2.addEdge(8,1,1, 5);
+//					   chain2.addEdge(1,8,1, 6);
+//					   chain2.addEdge(4,1,1, 7);
+//					   chain2.addEdge(8,4,1, 11);
+//					   chain2.addEdge(2,9,1, 8);
+//					   chain2.addEdge(9,8,1, 9);
+//					   chain2.addEdge(8,0,1, 10);
+//					   chain2.addEdge(0,4,1, 12);
+//					   chain2.addEdge(0,3,1, 13);
+//					   System.out.println(chain2.reconstructPath(6,8));
+
+					   List<Long> resu = chain.reconstructPath(teamnamemap.get(t1_part1.getText()),teamnamemap.get(t2_part1.getText()));
+
+					   System.out.println(resu);
+
+					   String finalans = "";
+					   String winteam = "";
+					   String loseteam = "";
+					   String oldwinteam = "";
+					   String oldloseteam = "";
+
+					   for (int i = 0; i < resu.size(); i++) {
+						   String qry = new String("Select * from game where \"Game Code\"=" + resu.get(i).toString());
+						   ResultSet result2 = stmt.executeQuery(qry);
+						   result2.next();
+						   String year = result2.getDate("Date").toString();
+						   String qry1 = new String("Select * from game_results where \"Game Code\"=" + resu.get(i).toString());
+						   ResultSet result3 = stmt.executeQuery(qry1);
+
+						   result3.next();
+						   if (result3.getString("Home Team Won").equals("t")) {
+						   	oldwinteam = winteam;
+						   	oldloseteam = loseteam;
+						   	winteam = teamcodemap.get(result3.getInt("Home Team Code"));
+						   	loseteam = teamcodemap.get(result3.getInt("Visit Team Code"));
+						   } else {
+							   oldwinteam = winteam;
+							   oldloseteam = loseteam;
+							   loseteam = teamcodemap.get(result3.getInt("Home Team Code"));
+							   winteam = teamcodemap.get(result3.getInt("Visit Team Code"));
+						   }
+						   if (!oldwinteam.equals(winteam) && !oldloseteam.equals(loseteam)){
+						   	finalans += winteam + " beat " + loseteam + " on " + year + '\n';
+						   }
+					   }
+
+					   Font f = new Font(Font.MONOSPACED,Font.PLAIN,12);
+					   output.setFont(f);
+					   output.setText(finalans);
+
+				   } catch (SQLException f) {
+					   f.printStackTrace();
+				   }
+			   }
+		   });
+
 		//Initialize
 		conferenceChoice = new JComboBox<String>(CONFERENCES);
 		update();
@@ -327,7 +451,7 @@ public class DBWindow extends JFrame{
 
 		//Query 4
 		ylvl++;
-		
+
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
@@ -337,8 +461,19 @@ public class DBWindow extends JFrame{
 		c.gridx = 1;
 		c.gridwidth = 3;
 		ui.add(getHomeFieldAdvantage, c);
-		
 
+		ylvl++;
+		c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = ylvl;
+		c.gridwidth = 2;
+		ui.add(t1_part1, c);
+		c.gridx = 2;
+		c.gridwidth = 2;
+		ui.add(t2_part1, c);
+		c.gridx = 4;
+		ui.add(go_part1, c);
 
 		add(ui);
 
