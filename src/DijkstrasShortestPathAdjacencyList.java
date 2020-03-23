@@ -1,3 +1,9 @@
+/**
+ * Most of this code was taken from github: src/main/java/com/williamfiset/algorithms/graphtheory/DijkstrasShortestPathAdjacencyList.java
+ * I made a few changes to account for which game was played when
+ * @author William Fiset, william.alexandre.fiset@gmail.com
+ */
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
