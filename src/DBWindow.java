@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.File;
@@ -13,7 +14,7 @@ import java.lang.Math;
 import java.util.List;
 import java.sql.*;
 import javax.swing.JOptionPane;
-
+import javax.security.auth.Subject;
 import javax.swing.*;
 
 public class DBWindow extends JFrame{
@@ -41,6 +42,11 @@ public class DBWindow extends JFrame{
 	
 	private JTableSelector tables1;
 	private JAttrSelector attrs1;
+	
+	//Query 2
+	private JTextField player1Choice;
+	private JTextField player2Choice;
+	private JButton getPlayerConnection;
 	
 	//Query 4
 	private JButton getHomeFieldAdvantage;
@@ -161,6 +167,75 @@ public class DBWindow extends JFrame{
 		//Initial values for attributes
 		attrs1.setAttributes(generateAllAttributes(tables1.getSelectItems()));
 		
+		//create player text fields
+		player1Choice = new JTextField();
+		player2Choice = new JTextField();
+		
+		//Initialize getPlayerConnection Button
+		getPlayerConnection = new JButton("Player Connection");
+		getPlayerConnection.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String player1 = player1Choice.getText();
+				String player2 = player2Choice.getText();
+				if(player1.split(" ").length != 2 || player2.split(" ").length != 2) {
+					return;
+				}
+				
+				try {
+					//get the player codes from the input names
+					String playerQuery = "select \"Player Code\" from player where" +
+							" \"First Name\"='" + player1.split(" ")[0] + "' and \"Last Name\"='" + player1.split(" ")[1] +
+							"' or " + "\"First Name\"='" + player2.split(" ")[0] + "' and \"Last Name\"='" + player2.split(" ")[1] + "'";
+					PreparedStatement pstmt = conn.prepareStatement(playerQuery);
+					int[] codes = new int[2];
+					int index = 0;
+					
+					if(pstmt.execute()) {
+						ResultSet rs = pstmt.getResultSet();
+						while(rs.next()) {
+							codes[index] = rs.getInt(1);
+							index++;
+						}
+					}
+					
+					String results = connectPlayer(codes[0], codes[1]);
+					
+					//reformat the results for readability
+					String[] resSplit = results.split(":");
+					String out = "";
+					for(int i = 0; i < resSplit.length; i++) {
+						if(resSplit[i].split("@")[0].equals("player")) {
+							String temp = playerFormat(resSplit[i].split("@")[1], resSplit[i+1].split("@")[1], resSplit[i+2].split("@")[1]);
+							out += temp.split(":")[0] + " played on " + temp.split(":")[1] + " in " + temp.split(":")[2];
+							i += 2;
+						}
+						else if(resSplit[i].split("@")[0].equals("game")) {
+							out += "\n who played against ";
+							if(resSplit[i+1].split("@")[0].equals("player")) {
+								String temp = gameFormat(resSplit[i].split("@")[1], resSplit[i+2].split("@")[1],
+														 resSplit[i+1].split("@")[1], resSplit[i+3].split("@")[1]);
+								out += temp.split(":")[1] + " on " + temp.split(":")[0] + " which " + temp.split(":")[2] +
+										" played for in " + temp.split(":")[3];
+								i += 3;
+							}
+							else {
+								String temp = gameFormat(resSplit[i].split("@")[1], resSplit[i+1].split("@")[1],"","");
+								out += temp.split(":")[1] + " on " + temp.split(":")[0];
+								i++;
+							}
+						}
+					}
+					output.setText(out);
+					
+					
+				} catch (SQLException f) {
+					// TODO Auto-generated catch block
+					f.printStackTrace();
+				}
+				//FILL
+			}
+		});
 		
 		//Initialize getHomeFieldAdvantage Button
 		getHomeFieldAdvantage = new JButton("Home Field Advantage");
@@ -446,6 +521,19 @@ public class DBWindow extends JFrame{
 		//Query 2
 		ylvl++;
 		
+		c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = ylvl;
+		c.weightx = 0.1;
+		ui.add(player1Choice, c);
+		c.gridwidth = 2;
+		c.gridx = 1;
+		ui.add(player2Choice, c);
+		c.gridwidth = 1;
+		c.gridx = 3;
+		ui.add(getPlayerConnection, c);
+		
 		//Query 3
 		ylvl++;
 
@@ -568,6 +656,203 @@ double cdf_approx(double z) {
 		z = -z;
 		return 0.5 * Math.exp(-(z*z+z)/2);
 	}
+}
+
+String connectPlayer(int startPlayer, int endPlayer) {
+	String playerStr = "player@" + startPlayer + ":";
+	String path = "";
+	boolean first = true;
+	ArrayList<Integer> used = new ArrayList<Integer>();
+	
+	try {
+		//get the teams the start player played on and when
+		String query = "select \"Team Code\", \"Year\" from in_year where \"Player Code\"=" + startPlayer;
+		PreparedStatement stmt = conn.prepareStatement(query);
+		if(stmt.execute()) {
+			ResultSet rs = stmt.getResultSet();
+			ArrayList<String> teams = new ArrayList<String>();
+			while(rs.next()) {
+				int team = rs.getInt(1);
+				String ret = "team@" + rs.getInt(1);
+				teams.add(rs.getInt(1) + "");
+				ret += ":year@" + rs.getDate(2) + ":";
+				
+				//check if they played on the same team
+				query = "select \"Player Code\", \"Year\" from in_year where \"Team Code\"=" + team +
+						" and \"Player Code\"=" + endPlayer;
+				stmt = conn.prepareStatement(query);
+				if(stmt.execute()) {
+					ResultSet rs2 = stmt.getResultSet();
+					while(rs2.next()) {
+						return playerStr + ret + "player@" + rs2.getInt(1) + ":team@" + team + ":year@" + 
+								rs2.getDate(2) + ":";
+					}
+				}
+				
+				//player could play on multiple teams
+				used.add(team);
+				String temp = connectTeamtoPlayer(team + "", endPlayer, used, -1);
+				if(!temp.equals("N/A")) {
+					temp = ret + temp;
+					if(first || path.split(":").length > temp.split(":").length) {
+						path = temp;
+						first = false;
+					}
+				}
+			}
+			
+			return playerStr + path;
+			
+		}
+	} catch(SQLException e) {
+		e.printStackTrace();
+	}
+	
+	//after exception catch
+	return "N/A";
+}
+
+String connectTeamtoPlayer(String team, int player, ArrayList<Integer> used, int toBeat) {		
+	if(toBeat == 0) { return "N/A"; }
+	try {
+		//see if the team played against the player's team
+		String query = "select in_year.\"Player Code\", in_year.\"Team Code\", in_year.\"Year\", game.\"Date\" from in_year, game where " +
+		"in_year.\"Team Code\" in (game.\"Visit Team Code\", game.\"Home Team Code\") and (game.\"Visit Team Code\"=" +
+		team + " or game.\"Home Team Code\"=" + team + ") and in_year.\"Player Code\"=" + player;
+		PreparedStatement stmt = conn.prepareStatement(query);
+		if(stmt.execute()) {
+			ResultSet rs = stmt.getResultSet();
+			while(rs.next()) {
+				return "game@" + rs.getDate(4) + ":player@" + rs.getInt(1) + ":team@" + rs.getInt(2) + ":year@" +
+						rs.getDate(3) + ":";
+			}
+		}
+		
+		//get paths of all teams that the team played against and return shortest one
+		query = "select \"Visit Team Code\", \"Home Team Code\", \"Date\" from game where \"Visit Team Code\"=" + team + " or \"Home Team Code\"=" +
+				team;
+		stmt = conn.prepareStatement(query);
+		if(stmt.execute()) {
+			ResultSet rs = stmt.getResultSet();
+			String path = "";
+			boolean first = true;
+			while(rs.next()) {
+				int oppteam = rs.getInt(1);
+				if(team.equals(oppteam + "")) {
+					oppteam = rs.getInt(2);
+				}
+				if(!used.contains(Integer.valueOf(oppteam))) {
+					used.add(Integer.valueOf(oppteam));
+					
+					String temp = connectTeamtoPlayer(oppteam + "", player, used, toBeat-1);
+					if(!temp.equals("N/A")) {
+						temp = "game@" + rs.getDate(3) + ":team@" + oppteam + ":" + temp;
+						if(first || path.split(":").length > temp.split(":").length) {
+							path = temp;
+							first = false;
+							toBeat = path.split(":").length / 2 - 1;
+						}
+						else {
+							while(used.indexOf(Integer.valueOf(oppteam)) != used.size()-1) {
+								used.remove(used.indexOf(Integer.valueOf(oppteam)) + 1);
+							}
+						}
+					}
+					else {
+						while(used.indexOf(Integer.valueOf(oppteam)) != used.size()-1) {
+							used.remove(used.indexOf(Integer.valueOf(oppteam)) + 1);
+						}
+					}
+				}
+			}
+			if(path.length() == 0) {
+				return "N/A";
+			}
+			return path;
+		}
+		
+	} catch(SQLException e) {
+		e.printStackTrace();
+	}
+	
+	return "N/A";
+}
+
+String playerFormat(String pcode, String tcode, String year) {
+	String ret = "";
+	try {
+		//get name
+		String query = "select \"First Name\",\"Last Name\" from player where \"Player Code\"=" + pcode;
+		PreparedStatement stmt = conn.prepareStatement(query);
+		if(stmt.execute()) {
+			ResultSet rs = stmt.getResultSet();
+			if(rs.next()) {
+				ret = rs.getString(1) + " " + rs.getString(2);
+			}
+		}
+		
+		//get team
+		query = "select \"Name\" from team where \"Team Code\"=" + tcode;
+		stmt = conn.prepareStatement(query);
+		if(stmt.execute()) {
+			ResultSet rs = stmt.getResultSet();
+			if(rs.next()) {
+				ret += ":" + rs.getString(1);
+			}
+		}
+		
+		//get year
+		ret += ":" + year.substring(0, year.indexOf("-"));
+		
+		return ret;
+	} catch(SQLException e) {
+		e.printStackTrace();
+	}
+	
+	return "";
+}
+
+String gameFormat(String date, String tcode, String pcode, String year) {
+	String ret = "";
+
+	try {
+		//get date
+		ret = date;
+		
+		//get team
+		String query = "select \"Name\" from team where \"Team Code\"=" + tcode;
+		PreparedStatement stmt = conn.prepareStatement(query);
+		if(stmt.execute()) {
+			ResultSet rs = stmt.getResultSet();
+			if(rs.next()) {
+				ret += ":" + rs.getString(1);
+			}
+		}
+		
+		if(pcode.length() > 0) {
+			//get name
+			query = "select \"First Name\",\"Last Name\" from player where \"Player Code\"=" + pcode;
+			stmt = conn.prepareStatement(query);
+			if(stmt.execute()) {
+				ResultSet rs = stmt.getResultSet();
+				if(rs.next()) {
+					ret += ":" + rs.getString(1) + " " + rs.getString(2);
+				}
+			}
+		}
+		
+		if(year.length() > 0) {
+			//get year
+			ret += ":" + year.substring(0, year.indexOf("-"));
+		}
+		
+		return ret;
+		
+	} catch(SQLException e) {
+		e.printStackTrace();
+	}
+	
+	return "";
 }
 
 }
