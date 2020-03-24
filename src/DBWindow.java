@@ -47,6 +47,10 @@ public class DBWindow extends JFrame{
 	private JTextField player1Choice;
 	private JTextField player2Choice;
 	private JButton getPlayerConnection;
+
+	//Query 3
+	private JTextField teamChoice;
+	private JButton findMostRushYards;
 	
 	//Query 4
 	private JButton getHomeFieldAdvantage;
@@ -236,7 +240,44 @@ public class DBWindow extends JFrame{
 				//FILL
 			}
 		});
-		
+
+		teamChoice = new JTextField();
+		findMostRushYards = new JButton("Teams with Most Rush Yards Against");
+		findMostRushYards.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					String team = teamChoice.getText();
+
+					String teamQuery = "SELECT DISTINCT ROW_NUMBER() OVER(ORDER BY sum(t2.\"Rush Yard\") DESC) as \"Ranking\", t2.\"Team Code\", team2.\"Name\" as \"Team Name\", sum(t2.\"Rush Yard\") as \"Overall Rushing Yards\"\r\n" +
+							"FROM team_game_statistics t1\r\n" +
+							"JOIN team_game_statistics t2\r\n" +
+							"ON t1.\"Game Code\" = t2.\"Game Code\"\r\n" +
+							"JOIN team team1\r\n" +
+							"ON t1.\"Team Code\" = team1.\"Team Code\"\r\n" +
+							"JOIN team team2\r\n" +
+							"ON team2.\"Team Code\" = t2.\"Team Code\"\r\n" +
+							"WHERE \r\n" +
+							"team1.\"Name\" = '" +
+							team +
+							"'\r\n" +
+							"AND t2.\"Team Code\"<>team1.\"Team Code\"\r\n" +
+							"GROUP BY t2.\"Team Code\", team2.\"Name\"\r\n" +
+							"ORDER BY \"Overall Rushing Yards\" DESC\r\n" +
+							"LIMIT 10;";
+					PreparedStatement pstmt = conn.prepareStatement(teamQuery);
+					if(pstmt.execute()) { //There were results
+						Font f = new Font(Font.MONOSPACED,Font.PLAIN,12);
+						output.setFont(f);
+						output.setText(resultSetToString(pstmt.getResultSet()));
+					}
+				} catch (SQLException f) {
+					// TODO Auto-generated catch block
+					f.printStackTrace();
+				}
+			}
+		});
+
 		//Initialize getHomeFieldAdvantage Button
 		getHomeFieldAdvantage = new JButton("Home Field Advantage");
 		getHomeFieldAdvantage.addActionListener(new ActionListener() {
@@ -536,6 +577,15 @@ public class DBWindow extends JFrame{
 		
 		//Query 3
 		ylvl++;
+		c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = ylvl;
+		c.weightx = 0.1;
+		ui.add(teamChoice, c);
+		c.gridwidth = 3;
+		c.gridx = 1;
+		ui.add(findMostRushYards, c);
 
 		//Query 4
 		ylvl++;
@@ -636,6 +686,9 @@ String resultSetToString(ResultSet rs) throws SQLException {
 	return_string += '|';
 	return_string += "\n";
 	//return_string += String.format("-".repeat(23*md.getColumnCount()+1));
+	for(int i = 0; i < 23*md.getColumnCount()+1; i++) {
+		return_string += '-';
+	}
 	return_string += "\n";
 	//Add Table Data
 	while(rs.next()) {
